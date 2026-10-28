@@ -29,7 +29,7 @@ export default function App() {
         speciesFilter={speciesFilter}
       />
 
-      <main className="mx-auto max-w-7xl px-4 pb-8 pt-20 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-[1680px] px-4 pb-8 pt-20 sm:px-6 lg:px-8">
         {view === 'detail' && selectedAnimal ? (
           <AnimalDetail animal={selectedAnimal} onBack={goHome} />
         ) : (
