@@ -1,11 +1,12 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useAnimals } from '../context/AnimalContext'
-import { X, PawPrint, Image as ImageIcon, Plus, Calendar } from 'lucide-react'
+import { X, PawPrint, Image as ImageIcon, Plus, Calendar, UserRound } from 'lucide-react'
 
 export default function AddAnimalForm({ onClose, onSuccess }) {
   const { saveAnimal } = useAnimals()
   const [loading, setLoading] = useState(false)
   const [photoUrl, setPhotoUrl] = useState(null)
+  const photoInputRef = useRef(null)
 
   const [form, setForm] = useState({
     name: '',
@@ -35,10 +36,19 @@ export default function AddAnimalForm({ onClose, onSuccess }) {
   }
 
   const handlePhoto = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setPhotoUrl(URL.createObjectURL(file))
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      window.alert('La foto debe pesar menos de 5 MB.')
+      e.target.value = ''
+      return
     }
+
+    const reader = new FileReader()
+    reader.onload = () => setPhotoUrl(reader.result)
+    reader.onerror = () => window.alert('No se pudo leer la foto. Inténtalo de nuevo.')
+    reader.readAsDataURL(file)
   }
 
   const handleSubmit = useCallback(async (e) => {
@@ -83,9 +93,9 @@ export default function AddAnimalForm({ onClose, onSuccess }) {
   }, [form, photoUrl, saveAnimal, onSuccess])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 md:p-8 animate-in fade-in zoom-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-3 backdrop-blur-sm sm:p-6">
+      <div className="glass-card flex max-h-[92vh] w-full max-w-2xl flex-col bg-white/90 shadow-card-hover">
+        <div className="flex items-center justify-between border-b border-slate-100/80 p-4 sm:p-5">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <PawPrint className="w-5 h-5 text-brand-600" /> Nuevo integrante
           </h2>
@@ -97,8 +107,8 @@ export default function AddAnimalForm({ onClose, onSuccess }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto p-4 sm:p-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="label-field">Nombre</label>
               <input
@@ -127,32 +137,30 @@ export default function AddAnimalForm({ onClose, onSuccess }) {
             </div>
             <div className="space-y-2">
               <label className="label-field">Género</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2" role="group" aria-label="Seleccionar género">
                 <button
                   type="button"
-                  role="radio"
                   aria-pressed={form.gender === 'male'}
                   onClick={() => setForm({ ...form, gender: 'male' })}
-                  className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+                  className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
                     form.gender === 'male'
-                      ? 'bg-brand-100 text-brand-700 border-brand-300'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                      ? 'border-brand-300 bg-brand-50 text-brand-700'
+                      : 'border-slate-200 bg-white/70 text-slate-600 hover:border-brand-200'
                   }`}
                 >
-                  🐾 Macho
+                  <UserRound className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" /> Macho
                 </button>
                 <button
                   type="button"
-                  role="radio"
                   aria-pressed={form.gender === 'female'}
                   onClick={() => setForm({ ...form, gender: 'female' })}
-                  className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+                  className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
                     form.gender === 'female'
-                      ? 'bg-brand-100 text-brand-700 border-brand-300'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                      ? 'border-brand-300 bg-brand-50 text-brand-700'
+                      : 'border-slate-200 bg-white/70 text-slate-600 hover:border-brand-200'
                   }`}
                 >
-                  🐾 Hembra
+                  <UserRound className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" /> Hembra
                 </button>
               </div>
             </div>
@@ -166,9 +174,17 @@ export default function AddAnimalForm({ onClose, onSuccess }) {
           <div className="space-y-2">
             <label className="label-field">Foto (opcional)</label>
             <div className="flex items-center gap-3">
-              <input className="sr-only" type="file" accept="image/*" onChange={handlePhoto} />
+              <input
+                ref={photoInputRef}
+                className="sr-only"
+                type="file"
+                accept="image/*"
+                onChange={handlePhoto}
+                aria-label="Seleccionar foto del animal"
+              />
               <button
                 type="button"
+                onClick={() => photoInputRef.current?.click()}
                 className="btn-outline flex items-center gap-2"
               >
                 <ImageIcon className="w-4 h-4" /> Subir foto
@@ -188,7 +204,7 @@ export default function AddAnimalForm({ onClose, onSuccess }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="label-field">Peso (kg)</label>
               <input className="input-field" type="number" step="0.1" name="weight" value={form.weight} onChange={handleChange} placeholder="Ej. 4.5" />

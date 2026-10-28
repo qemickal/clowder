@@ -1,59 +1,89 @@
 import { format } from 'date-fns'
-import { Pen, PlusCircle, Trash2, Edit2 } from 'lucide-react'
+import {
+  Activity,
+  BriefcaseMedical,
+  Edit2,
+  Frown,
+  HeartPulse,
+  Meh,
+  NotebookPen,
+  Scale,
+  Smile,
+  Sparkles,
+  Trash2,
+  Utensils,
+} from 'lucide-react'
 
 const typeConfig = {
-  health: { label: 'Salud', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', icon: '🩺' },
-  note: { label: 'Nota', color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', icon: '📝' },
-  activity: { label: 'Actividad', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100', icon: '🎾' },
-  vet: { label: 'Veterinario', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100', icon: '👨‍⚕️' },
-  food: { label: 'Alimentación', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100', icon: '🍗' },
-  weight: { label: 'Peso', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', icon: '⚖️' },
+  health: { label: 'Salud', color: 'text-rose-600', icon: HeartPulse },
+  note: { label: 'Nota', color: 'text-brand-700', icon: NotebookPen },
+  activity: { label: 'Actividad', color: 'text-emerald-600', icon: Activity },
+  vet: { label: 'Veterinario', color: 'text-blue-600', icon: BriefcaseMedical },
+  food: { label: 'Alimentación', color: 'text-amber-600', icon: Utensils },
+  weight: { label: 'Peso', color: 'text-brand-600', icon: Scale }
+}
+
+const moodConfig = {
+  happy: { label: 'Feliz', icon: Smile },
+  calm: { label: 'Tranquilo', icon: Meh },
+  sick: { label: 'Mal', icon: Frown },
+  excited: { label: 'Emocionado', icon: Sparkles },
 }
 
 export default function LogEntry({ log, onEdit, onDelete }) {
   const config = typeConfig[log.type] || typeConfig.note
+  const TypeIcon = config.icon
+  const mood = moodConfig[log.mood]
+  const MoodIcon = mood?.icon
   const dateStr = log.date ? format(new Date(log.date), 'dd MMM yyyy, HH:mm') : ''
 
   return (
-    <div className={`${config.bg} border ${config.border} rounded-xl p-4 mb-3 animate-in fade-in slide-in-from-left-2 duration-300`}>
-      <div className="flex items-center justify-between mb-2">
+    <article className="mb-2 rounded-xl border border-slate-200/70 bg-white/60 p-3.5 transition-colors hover:bg-white/80">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold">{config.icon}</span>
-          <span className={`text-xs font-semibold uppercase tracking-wider ${config.color}`}>{config.label}</span>
+          <span className={`flex h-8 w-8 items-center justify-center rounded-lg bg-white/80 ${config.color}`}>
+            <TypeIcon className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
+          </span>
+          <span className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${config.color}`}>
+            {config.label}
+          </span>
         </div>
-        <span className="text-xs text-slate-400">{dateStr}</span>
+        <time className="text-[10px] text-slate-400">{dateStr}</time>
       </div>
 
-      <h4 className="text-sm font-semibold text-slate-900 mb-1">{log.title}</h4>
-      {log.description && (
-        <p className="text-sm text-slate-600 mb-3">{log.description}</p>
-      )}
+      <h4 className="text-sm font-semibold text-slate-900">{log.title}</h4>
+      {log.description && <p className="mt-1 text-xs leading-relaxed text-slate-600">{log.description}</p>}
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 text-xs text-slate-400">
-          {log.mood && (
-            <span className="flex items-center gap-1">
-              {log.mood === 'happy' ? '😊 Feliz' : log.mood === 'calm' ? '😐 Tranquilo' : log.mood === 'sick' ? '😔 Mal' : log.mood}
-            </span>
+      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2">
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+          {mood && MoodIcon && (
+            <>
+              <MoodIcon className="h-3.5 w-3.5 text-slate-400" strokeWidth={1.6} aria-hidden="true" />
+              <span>{mood.label}</span>
+            </>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           <button
+            type="button"
             onClick={() => onEdit?.(log)}
-            className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition-colors"
+            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-brand-600"
             title="Editar"
+            aria-label={`Editar registro: ${log.title}`}
           >
-            <Edit2 className="w-3 h-3" />
+            <Edit2 className="h-3.5 w-3.5" strokeWidth={1.7} />
           </button>
           <button
+            type="button"
             onClick={() => onDelete?.(log.id)}
-            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
             title="Eliminar"
+            aria-label={`Eliminar registro: ${log.title}`}
           >
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.7} />
           </button>
         </div>
       </div>
-    </div>
+    </article>
   )
 }

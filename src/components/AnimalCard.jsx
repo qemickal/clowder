@@ -1,108 +1,86 @@
-import { useState } from 'react'
-import { MoreVertical, Heart, AlertCircle, Calendar } from 'lucide-react'
+import { Activity, ArrowUpRight, Cat, Dog, Scale } from 'lucide-react'
 
-export default function AnimalCard({ animal, onSelect }) {
-  const [menuOpen, setMenuOpen] = useState(false)
-
+export default function AnimalCard({ animal, onSelect, viewMode = 'grid' }) {
+  const listView = viewMode === 'list'
   const speciesLabel = animal.species === 'cat' ? 'Gato' : 'Perro'
-  const speciesIcon = animal.species === 'cat' ? (
-    <span className="w-6 h-6 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-sm font-bold">🐱</span>
-  ) : (
-    <span className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-sm font-bold">🐶</span>
-  )
-
+  const SpeciesIcon = animal.species === 'cat' ? Cat : Dog
   const latestLog = animal.logs?.[0]
-  const latestWeight = animal.health.weightHistory?.[0]
+  const health = animal.health || {}
+  const latestWeight = health.weightHistory?.[0]
 
   const statusBadges = []
-  if (animal.health.vaccinated) statusBadges.push({ label: 'Vacunado', className: 'badge-success' })
-  if (animal.health.sterilized) statusBadges.push({ label: 'Esterilizado', className: 'badge-info' })
-  if (!animal.health.dewormed) statusBadges.push({ label: 'Desparasitación pendiente', className: 'badge-warning' })
+  if (health.vaccinated) statusBadges.push({ label: 'Vacunas al día', className: 'badge-success' })
+  if (health.sterilized) statusBadges.push({ label: 'Esterilizado', className: 'badge-info' })
+  if (!health.dewormed) statusBadges.push({ label: 'Desparasitación pendiente', className: 'badge-warning' })
 
   return (
-    <div
-      className="glass-card cursor-pointer group hover:shadow-card-hover transition-all duration-200"
+    <button
+      type="button"
+      aria-label={`Ver detalles de ${animal.name}`}
+      className={`glass-card group w-full cursor-pointer text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${listView ? 'sm:flex sm:items-center' : ''}`}
       onClick={() => onSelect(animal)}
     >
-      <div className="relative h-48 overflow-hidden">
+      <div className={`relative h-36 overflow-hidden ${listView ? 'sm:h-32 sm:w-32 sm:shrink-0' : ''}`}>
         {animal.photo ? (
           <img
             src={animal.photo}
             alt={animal.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center">
-            {speciesIcon}
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-100/80 via-white/60 to-brand-200/80">
+            <SpeciesIcon className="h-14 w-14 text-brand-300" strokeWidth={1.35} aria-hidden="true" />
           </div>
         )}
-        <div className="absolute top-3 right-3 flex gap-2">
-          <button
-            onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen) }}
-            className="p-2 bg-white/90 backdrop-blur rounded-full shadow-card text-slate-600 hover:bg-brand-600 hover:text-white transition-colors"
-          >
-            <MoreVertical className="w-5 h-5" />
-          </button>
-        </div>
-
-        {menuOpen && (
-          <div className="absolute top-12 right-3 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-            <button
-              onClick={() => {}}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors"
-            >
-              <Heart className="w-4 h-4" /> Marcar favorito
-            </button>
-            <button
-              onClick={() => {}}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors"
-            >
-              <Paw className="w-4 h-4" /> Ver historial
-            </button>
-            <button
-              onClick={() => {}}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-600 transition-colors"
-            >
-              <AlertCircle className="w-4 h-4" /> Eliminar
-            </button>
-          </div>
-        )}
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur-md">
+          <SpeciesIcon className="h-3.5 w-3.5 text-brand-600" strokeWidth={1.7} aria-hidden="true" />
+          {speciesLabel}
+        </span>
+        <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-white/80 text-slate-500 shadow-sm backdrop-blur-md transition-colors group-hover:text-brand-700">
+          <ArrowUpRight className="h-4 w-4" strokeWidth={1.7} aria-hidden="true" />
+        </span>
       </div>
 
-      <div className="p-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              {speciesIcon}
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{speciesLabel}</span>
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 leading-tight">{animal.name}</h3>
-            <p className="text-sm text-slate-500">
-              {animal.breed || 'Raza no definida'} • {animal.age} año{animal.age !== 1 ? 's' : ''}
+      <div className={`min-w-0 space-y-3 p-4 ${listView ? 'flex-1' : ''}`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="truncate text-base font-semibold text-slate-900">{animal.name}</h3>
+            <p className="mt-0.5 truncate text-xs text-slate-500">
+              {animal.breed || 'Raza no definida'} <span aria-hidden="true">·</span> {animal.age} año{animal.age !== 1 ? 's' : ''}
             </p>
           </div>
-          <div className="flex flex-wrap gap-1">
-            {statusBadges.map((badge, i) => (
-              <span key={i} className={badge.className}>{badge.label}</span>
+          {animal.gender && (
+            <span className="shrink-0 rounded-full bg-slate-100/80 px-2 py-1 text-[10px] font-medium text-slate-500">
+              {animal.gender === 'female' ? 'Hembra' : 'Macho'}
+            </span>
+          )}
+        </div>
+
+        {statusBadges.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {statusBadges.slice(0, 2).map((badge) => (
+              <span key={badge.label} className={badge.className}>{badge.label}</span>
             ))}
           </div>
-        </div>
+        )}
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="bg-slate-50 rounded-xl p-3">
-            <p className="text-xs text-slate-500 uppercase font-semibold">Peso actual</p>
-            <p className="text-sm font-bold text-slate-900">
-              {latestWeight ? latestWeight.weight : animal.weight} kg
-            </p>
+        <div className="grid grid-cols-2 gap-2 border-t border-slate-100/80 pt-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <Scale className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.7} aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Peso</p>
+              <p className="truncate text-xs font-semibold text-slate-700">{latestWeight ? latestWeight.weight : animal.weight} kg</p>
+            </div>
           </div>
-          <div className="bg-slate-50 rounded-xl p-3">
-            <p className="text-xs text-slate-500 uppercase font-semibold">Última actividad</p>
-            <p className="text-sm font-bold text-slate-900 truncate">
-              {latestLog ? latestLog.title : 'Sin registros'}
-            </p>
+          <div className="flex min-w-0 items-center gap-2">
+            <Activity className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.7} aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Último registro</p>
+              <p className="truncate text-xs font-semibold text-slate-700">{latestLog?.title || 'Sin registros'}</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </button>
   )
 }
