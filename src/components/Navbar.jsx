@@ -1,60 +1,76 @@
 import { useState } from 'react'
-import { PawPrint, Menu, X, Sun, Moon, Bell, User } from 'lucide-react'
+import { Menu, X, House, Cat, Dog, Plus } from 'lucide-react'
 import { useAnimals } from '../context/AnimalContext'
 
-export default function Navbar() {
+export default function Navbar({ onHome, onFilterSpecies, onAddAnimal, speciesFilter = 'all' }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const { animals } = useAnimals()
-  const catsCount = animals.filter((a) => a.species === 'cat').length
-  const dogsCount = animals.filter((a) => a.species === 'dog').length
+  const catsCount = animals.filter((animal) => animal.species === 'cat').length
+  const dogsCount = animals.filter((animal) => animal.species === 'dog').length
+
+  const select = (callback, value) => {
+    callback(value)
+    setMenuOpen(false)
+  }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/70 bg-white/75 shadow-sm backdrop-blur-2xl">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-4">
+          <button type="button" onClick={onHome} className="flex shrink-0 items-center" aria-label="Ir al inicio de Clowder">
+            <img
+              src="/clowder-wordmark.png"
+              alt="Clowder"
+              className="h-6 w-auto max-w-[150px] object-contain sm:h-7 sm:max-w-[170px]"
+            />
+          </button>
+
+          <div className="hidden items-center gap-1 md:flex">
+            <button type="button" onClick={onHome} className={`nav-link px-3 py-2 text-sm ${speciesFilter === 'all' ? 'text-brand-700' : ''}`}>
+              <House className="mr-1 h-4 w-4" /> Inicio
+            </button>
+            <button type="button" onClick={() => onFilterSpecies('cat')} className={`nav-link px-3 py-2 text-sm ${speciesFilter === 'cat' ? 'text-brand-700' : ''}`}>
+              <Cat className="mr-1 h-4 w-4" /> Gatos
+              <span className="ml-1 rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700">{catsCount}</span>
+            </button>
+            <button type="button" onClick={() => onFilterSpecies('dog')} className={`nav-link px-3 py-2 text-sm ${speciesFilter === 'dog' ? 'text-brand-700' : ''}`}>
+              <Dog className="mr-1 h-4 w-4" /> Perros
+              <span className="ml-1 rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700">{dogsCount}</span>
+            </button>
+          </div>
+
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
-              <PawPrint className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-xl text-brand-700 tracking-tight">CLOWDER</span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-1">
-            <button className="nav-link px-3 py-2 text-sm">
-              <HomeIcon className="w-4 h-4 mr-2" /> Inicio
-            </button>
-            <button className="nav-link px-3 py-2 text-sm">
-              <Cat className="w-4 h-4 mr-2" /> Gatos <span className="bg-brand-200 text-brand-700 text-xs font-bold px-2 py-0.5 rounded ml-1">{catsCount}</span>
-            </button>
-            <button className="nav-link px-3 py-2 text-sm">
-              <Dog className="w-4 h-4 mr-2" /> Perros <span className="bg-brand-200 text-brand-700 text-xs font-bold px-2 py-0.5 rounded ml-1">{dogsCount}</span>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button className="text-slate-400 hover:text-brand-600 transition-colors p-2 rounded-lg hover:bg-slate-100">
-              <Bell className="w-5 h-5" />
-            </button>
-            <button className="text-slate-400 hover:text-brand-600 transition-colors p-2 rounded-lg hover:bg-slate-100">
-              <User className="w-5 h-5" />
+            <button type="button" onClick={onAddAnimal} className="btn-brand hidden gap-2 px-4 py-2 sm:inline-flex">
+              <Plus className="h-4 w-4" /> Agregar
             </button>
             <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden text-slate-600 p-2 rounded-lg hover:bg-slate-100"
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden"
+              aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={menuOpen}
             >
-              <Menu className="w-5 h-5" />
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
       </div>
 
       {menuOpen && (
-        <div className="md:hidden bg-white border-b border-slate-200">
-          <div className="px-4 py-3 space-y-2">
-            <button className="nav-link-active w-full justify-start">Inicio</button>
-            <button className="nav-link w-full justify-start">Gatos ({catsCount})</button>
-            <button className="nav-link w-full justify-start">Perros ({dogsCount})</button>
-            <button className="nav-link w-full justify-start">Agregar animal</button>
+        <div className="border-t border-white/70 bg-white/85 backdrop-blur-2xl md:hidden">
+          <div className="space-y-1 px-4 py-3">
+            <button type="button" onClick={() => select(onHome)} className="nav-link-active w-full justify-start">
+              <House className="h-4 w-4" /> Inicio
+            </button>
+            <button type="button" onClick={() => select(onFilterSpecies, 'cat')} className="nav-link w-full justify-start">
+              <Cat className="h-4 w-4" /> Gatos ({catsCount})
+            </button>
+            <button type="button" onClick={() => select(onFilterSpecies, 'dog')} className="nav-link w-full justify-start">
+              <Dog className="h-4 w-4" /> Perros ({dogsCount})
+            </button>
+            <button type="button" onClick={() => select(onAddAnimal)} className="nav-link w-full justify-start text-brand-700">
+              <Plus className="h-4 w-4" /> Agregar animal
+            </button>
           </div>
         </div>
       )}

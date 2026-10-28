@@ -4,8 +4,8 @@
   "description": "Registro y seguimiento del bienestar de tus gatos y perros",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#faf5ff",
-  "theme_color": "#9333ea",
+  "background_color": "#faf8f6",
+  "theme_color": "#847368",
   "orientation": "portrait",
   "icons": [
     {

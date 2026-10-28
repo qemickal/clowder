@@ -1,24 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAnimals } from '../context/AnimalContext'
 import {
   ArrowLeft,
   Plus,
-  Edit2,
   Trash2,
-  Image as ImageIcon,
-  Menu,
-  X,
   ClipboardList,
   HeartPulse,
   PawPrint,
   Info,
+  Cat,
+  Dog,
+  UserRound,
 } from 'lucide-react'
 import HealthSummary from '../components/HealthSummary'
 import LogEntry from '../components/LogEntry'
 
 export default function AnimalDetail({ animal, onBack }) {
-  const { saveAnimal, addLog, deleteAnimal, addWeightRecord } = useAnimals()
-  const [currentAnimal, setCurrentAnimal] = useState(animal)
+  const { animals, saveAnimal, addLog, deleteAnimal, addWeightRecord } = useAnimals()
+  const currentAnimal = animals.find((item) => item.id === animal.id) || animal
   const [showLogForm, setShowLogForm] = useState(false)
 
   const [newLog, setNewLog] = useState({
@@ -45,7 +44,6 @@ export default function AnimalDetail({ animal, onBack }) {
   const handleDeleteLog = async (id) => {
     const updatedLogs = (currentAnimal.logs || []).filter((l) => l.id !== id)
     await saveAnimal({ ...currentAnimal, logs: updatedLogs })
-    setCurrentAnimal((prev) => ({ ...prev, logs: updatedLogs }))
   }
 
   const handleDeleteAnimal = async () => {
@@ -56,13 +54,14 @@ export default function AnimalDetail({ animal, onBack }) {
   }
 
   const speciesLabel = currentAnimal.species === 'cat' ? 'Gato' : 'Perro'
-  const latestWeight = currentAnimal.health.weightHistory?.[0]
+  const SpeciesIcon = currentAnimal.species === 'cat' ? Cat : Dog
+  const latestWeight = currentAnimal.health?.weightHistory?.[0]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{currentAnimal.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{currentAnimal.name}</h1>
           <p className="text-slate-500">
             {speciesLabel} • {currentAnimal.breed || 'Raza no definida'} • {currentAnimal.age} año{currentAnimal.age !== 1 ? 's' : ''}
           </p>
@@ -83,35 +82,37 @@ export default function AnimalDetail({ animal, onBack }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="glass-card p-6 relative overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="glass-card p-4 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
-              <PawPrint className="w-24 h-24 text-brand-600" />
+              <PawPrint className="h-20 w-20 text-brand-600" strokeWidth={1.1} />
             </div>
-            <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex flex-col md:flex-row gap-4 items-start">
               <div className="flex-shrink-0">
                 {currentAnimal.photo ? (
                   <img
                     src={currentAnimal.photo}
                     alt={currentAnimal.name}
-                    className="w-40 h-40 rounded-2xl object-cover shadow-card border-4 border-brand-100"
+                    className="h-32 w-32 rounded-2xl border border-white/80 object-cover shadow-card sm:h-36 sm:w-36"
                   />
                 ) : (
-                  <div className="w-40 h-40 rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center border-4 border-brand-100">
-                    <Paw className="w-16 h-16 text-brand-400" />
+                  <div className="flex h-32 w-32 items-center justify-center rounded-2xl border border-white/80 bg-gradient-to-br from-brand-100/80 via-white/70 to-brand-200/80 sm:h-36 sm:w-36">
+                    <SpeciesIcon className="h-14 w-14 text-brand-300" strokeWidth={1.35} aria-hidden="true" />
                   </div>
                 )}
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    {currentAnimal.species === 'cat' ? '🐱 Gato' : '🐶 Perro'}
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-100 bg-brand-50/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-brand-700">
+                    <SpeciesIcon className="h-3.5 w-3.5" strokeWidth={1.6} aria-hidden="true" /> {speciesLabel}
                   </span>
                   {currentAnimal.gender && (
-                    <span className="w-2 h-2 rounded-full bg-brand-500"></span>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
+                      <UserRound className="h-3.5 w-3.5" strokeWidth={1.6} aria-hidden="true" />
+                      {currentAnimal.gender === 'female' ? 'Hembra' : 'Macho'}
+                    </span>
                   )}
-                  <span className="text-sm text-slate-600 capitalize">{currentAnimal.gender}</span>
                 </div>
                 <div className="space-y-1 text-sm text-slate-600">
                   <p><span className="font-semibold text-slate-900">Color:</span> {currentAnimal.color || 'No especificado'}</p>
@@ -130,8 +131,8 @@ export default function AnimalDetail({ animal, onBack }) {
             </div>
           </div>
 
-          <div className="glass-card p-6">
-            <div className="flex items-center justify-between mb-6">
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                 <Info className="w-4 h-4 text-brand-600" /> Bitácora cronológica
               </h3>
@@ -165,7 +166,7 @@ export default function AnimalDetail({ animal, onBack }) {
           </div>
 
           {showLogForm && (
-            <div className="glass-card p-6 mt-6 animate-in zoom-in duration-200">
+            <div className="glass-card p-4 mt-4 animate-in zoom-in duration-200">
               <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-brand-600" /> Nuevo registro
               </h3>
@@ -252,10 +253,10 @@ export default function AnimalDetail({ animal, onBack }) {
           )}
         </div>
 
-        <div className="lg:col-span-1 space-y-6">
-          <HealthSummary health={currentAnimal.health} />
+        <div className="lg:col-span-1 space-y-4">
+          <HealthSummary health={currentAnimal.health || {}} />
 
-          <div className="glass-card p-6">
+          <div className="glass-card p-4">
             <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
               <HeartPulse className="w-4 h-4 text-brand-600" /> Peso
             </h3>
@@ -267,16 +268,15 @@ export default function AnimalDetail({ animal, onBack }) {
                 </span>
               </div>
               <button
-                onClick={() => {
-                  const weight = prompt('Ingrese el peso actual (kg):')
-                  if (weight) {
-                    addWeightRecord(currentAnimal.id, parseFloat(weight))
-                    const updatedAnimal = { ...currentAnimal }
-                    updatedAnimal.health.weightHistory = [
-                      ...(updatedAnimal.health.weightHistory || []),
-                      { id: crypto.randomUUID(), weight: parseFloat(weight), date: new Date().toISOString() },
-                    ]
-                    setCurrentAnimal(updatedAnimal)
+                type="button"
+                onClick={async () => {
+                  const input = window.prompt('Ingrese el peso actual (kg):')
+                  if (input === null || input.trim() === '') return
+                  const weight = Number.parseFloat(input)
+                  if (Number.isFinite(weight) && weight > 0) {
+                    await addWeightRecord(currentAnimal.id, weight)
+                  } else {
+                    window.alert('Ingresa un peso válido mayor que cero.')
                   }
                 }}
                 className="w-full btn-brand text-sm py-2"
@@ -286,7 +286,7 @@ export default function AnimalDetail({ animal, onBack }) {
             </div>
           </div>
 
-          <div className="glass-card p-6">
+          <div className="glass-card p-4">
             <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
               <PawPrint className="w-4 h-4 text-brand-600" /> Acciones
             </h3>
