@@ -112,7 +112,7 @@ export default function Home({
             />
           </div>
 
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1 rounded-xl bg-slate-100/70 p-1">
               <button type="button" onClick={() => onSpeciesFilterChange('all')} className={filterClass(speciesFilter === 'all')}>
                 Todos

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useAnimals } from '../context/AnimalContext'
 import {
   ArrowLeft,
@@ -11,14 +12,23 @@ import {
   Cat,
   Dog,
   UserRound,
+  Printer,
+  FileDown,
 } from 'lucide-react'
 import HealthSummary from '../components/HealthSummary'
 import LogEntry from '../components/LogEntry'
+import AnimalPrintRecord from '../components/AnimalPrintRecord'
+import { buildAnimalRecord } from '../utils/animalRecord'
+import { downloadAnimalPdf } from '../utils/animalPdf'
 
 export default function AnimalDetail({ animal, onBack }) {
   const { animals, saveAnimal, addLog, deleteAnimal, addWeightRecord } = useAnimals()
   const currentAnimal = animals.find((item) => item.id === animal.id) || animal
+  const [printDate, setPrintDate] = useState(() => new Date())
+  const record = useMemo(() => buildAnimalRecord(currentAnimal, printDate), [currentAnimal, printDate])
   const [showLogForm, setShowLogForm] = useState(false)
+  const [generatingPdf, setGeneratingPdf] = useState(false)
+  const [pdfNotice, setPdfNotice] = useState('')
 
   const [newLog, setNewLog] = useState({
     type: 'note',
@@ -53,32 +63,64 @@ export default function AnimalDetail({ animal, onBack }) {
     }
   }
 
+  const handlePrint = () => {
+    // Update the date before the native print dialog captures the page.
+    flushSync(() => setPrintDate(new Date()))
+    window.print()
+  }
+
+  const handleDownloadPdf = async () => {
+    setPdfNotice('')
+    setGeneratingPdf(true)
+    try {
+      const { photoMissing, unsupportedCharacters } = await downloadAnimalPdf(buildAnimalRecord(currentAnimal))
+      const notices = []
+      if (photoMissing) notices.push('La ficha se descargó, pero no fue posible incluir la foto.')
+      if (unsupportedCharacters) notices.push('Algunos caracteres no pudieron incluirse en el PDF. Usa “Imprimir ficha” para conservarlos.')
+      setPdfNotice(notices.join(' '))
+    } catch (error) {
+      console.error('No se pudo generar la ficha en PDF:', error)
+      setPdfNotice('No pudimos generar el PDF. Inténtalo de nuevo o usa la opción de imprimir.')
+    } finally {
+      setGeneratingPdf(false)
+    }
+  }
+
   const speciesLabel = currentAnimal.species === 'cat' ? 'Gato' : 'Perro'
   const SpeciesIcon = currentAnimal.species === 'cat' ? Cat : Dog
-  const latestWeight = currentAnimal.health?.weightHistory?.[0]
+  const currentWeight = record.currentWeight
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <>
+    <div className="space-y-4 print:hidden">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{currentAnimal.name}</h1>
           <p className="text-slate-500">
             {speciesLabel} • {currentAnimal.breed || 'Raza no definida'} • {currentAnimal.age} año{currentAnimal.age !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={onBack}
-            className="btn-outline flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" /> Volver
-          </button>
-          <button
-            onClick={() => setShowLogForm(true)}
-            className="btn-brand flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" /> Nuevo registro
-          </button>
+        <div>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap md:justify-end">
+            <button type="button" onClick={onBack} className="btn-outline px-2 text-xs sm:px-4 sm:text-sm">
+              <ArrowLeft className="h-4 w-4" /> Volver
+            </button>
+            <button type="button" onClick={handlePrint} className="btn-outline px-2 text-xs sm:px-4 sm:text-sm">
+              <Printer className="h-4 w-4" /> Imprimir ficha
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={generatingPdf}
+              className="btn-outline px-2 text-xs disabled:pointer-events-none disabled:opacity-50 sm:px-4 sm:text-sm"
+            >
+              <FileDown className="h-4 w-4" /> {generatingPdf ? 'Preparando...' : 'Guardar PDF'}
+            </button>
+            <button type="button" onClick={() => setShowLogForm(true)} className="btn-brand px-2 text-xs sm:px-4 sm:text-sm">
+              <Plus className="h-4 w-4" /> Nuevo registro
+            </button>
+          </div>
+          {pdfNotice && <p role="status" className="mt-2 max-w-md text-xs text-amber-700 md:ml-auto md:text-right">{pdfNotice}</p>}
         </div>
       </div>
 
@@ -117,7 +159,7 @@ export default function AnimalDetail({ animal, onBack }) {
                 <div className="space-y-1 text-sm text-slate-600">
                   <p><span className="font-semibold text-slate-900">Color:</span> {currentAnimal.color || 'No especificado'}</p>
                   <p><span className="font-semibold text-slate-900">Microchip:</span> {currentAnimal.microchip || 'No registrado'}</p>
-                  <p><span className="font-semibold text-slate-900">Peso actual:</span> {latestWeight ? latestWeight.weight : currentAnimal.weight} kg</p>
+                  <p><span className="font-semibold text-slate-900">Peso actual:</span> {currentWeight}</p>
                   {currentAnimal.rescuedAt && (
                     <p><span className="font-semibold text-slate-900">Rescatado/llegó:</span> {new Date(currentAnimal.rescuedAt).toLocaleDateString('es-ES')}</p>
                   )}
@@ -264,7 +306,7 @@ export default function AnimalDetail({ animal, onBack }) {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600">Peso actual</span>
                 <span className="text-lg font-bold text-slate-900">
-                  {latestWeight ? latestWeight.weight : currentAnimal.weight} kg
+                  {currentWeight}
                 </span>
               </div>
               <button
@@ -302,5 +344,7 @@ export default function AnimalDetail({ animal, onBack }) {
         </div>
       </div>
     </div>
+    <AnimalPrintRecord record={record} />
+    </>
   )
 }

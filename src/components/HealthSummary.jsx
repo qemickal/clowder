@@ -6,8 +6,10 @@ import {
   ShieldCheck,
   Stethoscope,
 } from 'lucide-react'
+import { getWeightHistory } from '../utils/animalRecord'
 
 export default function HealthSummary({ health = {} }) {
+  const weightHistory = getWeightHistory(health)
   const indicators = [
     { label: 'Vacunas', value: health.vaccinated ? 'Al día' : 'Pendiente', active: health.vaccinated },
     { label: 'Desparasitación', value: health.dewormed ? 'Al día' : 'Pendiente', active: health.dewormed },
@@ -67,7 +69,7 @@ export default function HealthSummary({ health = {} }) {
               <BarChart3 className="h-4 w-4 text-brand-600" aria-hidden="true" /> Historial de peso
             </h3>
             <div className="space-y-1.5">
-              {health.weightHistory.slice(0, 5).map((record) => (
+              {weightHistory.slice(0, 5).map((record) => (
                 <div key={record.id} className="flex items-center justify-between text-xs">
                   <span className="text-slate-500">
                     {new Date(record.date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}

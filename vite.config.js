@@ -6,6 +6,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        // Keep the PDF library separate while Vite preloads it for offline use.
+        manualChunks: { pdf: ['jspdf'] },
+      },
+    },
   },
   server: {
     port: 5173,

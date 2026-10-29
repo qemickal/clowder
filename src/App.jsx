@@ -27,11 +27,18 @@ export default function App() {
         onFilterSpecies={selectSpecies}
         onAddAnimal={() => setShowAdd(true)}
         speciesFilter={speciesFilter}
+        isHome={view === 'home'}
       />
 
-      <main className="mx-auto max-w-[1680px] px-4 pb-8 pt-20 sm:px-6 lg:px-8">
+      <main className="app-main mx-auto max-w-[1680px] px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[calc(5rem+env(safe-area-inset-top))] sm:px-6 sm:pl-[max(1.5rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] lg:px-8 lg:pb-8">
         {view === 'detail' && selectedAnimal ? (
-          <AnimalDetail animal={selectedAnimal} onBack={goHome} />
+          <AnimalDetail
+            animal={selectedAnimal}
+            onBack={() => {
+              goHome()
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+          />
         ) : (
           <Home
             speciesFilter={speciesFilter}
@@ -39,6 +46,7 @@ export default function App() {
             onAnimalSelect={(animal) => {
               setSelectedAnimal(animal)
               setView('detail')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
             }}
             onAddAnimal={() => setShowAdd(true)}
           />

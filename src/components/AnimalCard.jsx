@@ -1,4 +1,5 @@
 import { Activity, ArrowUpRight, Cat, Dog, Scale } from 'lucide-react'
+import { formatWeight, getWeightHistory } from '../utils/animalRecord'
 
 export default function AnimalCard({ animal, onSelect, viewMode = 'grid' }) {
   const listView = viewMode === 'list'
@@ -6,7 +7,7 @@ export default function AnimalCard({ animal, onSelect, viewMode = 'grid' }) {
   const SpeciesIcon = animal.species === 'cat' ? Cat : Dog
   const latestLog = animal.logs?.[0]
   const health = animal.health || {}
-  const latestWeight = health.weightHistory?.[0]
+  const latestWeight = getWeightHistory(health).find((record) => formatWeight(record.weight) !== 'No registrado')
 
   const statusBadges = []
   if (health.vaccinated) statusBadges.push({ label: 'Vacunas al día', className: 'badge-success' })
@@ -69,7 +70,7 @@ export default function AnimalCard({ animal, onSelect, viewMode = 'grid' }) {
             <Scale className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.7} aria-hidden="true" />
             <div className="min-w-0">
               <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Peso</p>
-              <p className="truncate text-xs font-semibold text-slate-700">{latestWeight ? latestWeight.weight : animal.weight} kg</p>
+              <p className="truncate text-xs font-semibold text-slate-700">{formatWeight(latestWeight?.weight ?? animal.weight)}</p>
             </div>
           </div>
           <div className="flex min-w-0 items-center gap-2">
