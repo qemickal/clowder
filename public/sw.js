@@ -1,5 +1,5 @@
-const CACHE_NAME = 'clowder-v3'
-const APP_SHELL = ['/', '/index.html', '/manifest.json', '/clowder-icon.svg', '/clowder-wordmark.png']
+const CACHE_NAME = 'clowder-v4'
+const APP_SHELL = ['/', '/index.html', '/manifest.json', '/clowder-icon.svg', '/clowder-wordmark.png', '/fonts/DejaVuSans.ttf']
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
@@ -47,13 +47,15 @@ self.addEventListener('fetch', (event) => {
         }
         return response
       } catch {
-        return (await caches.match(request)) || (await caches.match('/index.html')) || Response.error()
+        return (await caches.match(request, { ignoreVary: true })) || (await caches.match('/index.html', { ignoreVary: true })) || Response.error()
       }
     })())
     return
   }
 
-  event.respondWith(caches.match(request).then(async (cached) => {
+  // Same-origin app assets are identical even when a static host sends Vary: Origin.
+  // Ignoring that header lets pre-cached module scripts work on the first offline launch.
+  event.respondWith(caches.match(request, { ignoreVary: true }).then(async (cached) => {
     if (cached) return cached
 
     try {
